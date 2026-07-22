@@ -234,7 +234,7 @@ def build() -> tuple[dict, list[dict]]:
                     ),
                     lens_config(
                         group=2,
-                        label="What parents here prefer",
+                        label="What parent here prefer",
                         bars=PREFERENCE,
                         colors=PREFERENCE_COLORS,
                     ),
@@ -271,7 +271,7 @@ def build() -> tuple[dict, list[dict]]:
         },
         {
             "id": 2,
-            "label": "What parents here prefer",
+            "label": "What parent here prefer",
             "bars": [{"label": item} for item in PREFERENCE],
         },
     ]

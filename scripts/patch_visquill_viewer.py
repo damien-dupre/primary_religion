@@ -44,6 +44,14 @@ REPLACEMENTS = (
         'Y=this.buildTitle(n),ot=10,dt=n.initialRadius',
         'Y=this.buildTitle(n)+72,ot=10,dt=n.initialRadius',
     ),
+    (
+        'const ht=Math.max(dt,Dt.value+ot);return Math.min(Math.PI*2,at.group.bars.length*at.cfg.preferredSegmentLength/ht)',
+        'const ht=Math.max(dt,Dt.value+ot),Xt=ht>=120?40:16;return Math.min(Math.PI*2,(at.group.bars.length*at.cfg.preferredSegmentLength+Xt)/ht)',
+    ),
+    (
+        '{threshold:50,arcGap:.04,animationDuration:1e3,arcLayout:mt}',
+        '{threshold:50,arcGap:.06,animationDuration:1e3,arcLayout:mt}',
+    ),
 )
 
 PATCH_UPDATES = (
@@ -86,6 +94,14 @@ PATCH_UPDATES = (
     (
         'Y=this.buildTitle(n),ot=10,dt=n.initialRadius',
         'Y=this.buildTitle(n)+72,ot=10,dt=n.initialRadius',
+    ),
+    (
+        'const ht=Math.max(dt,Dt.value+ot);return Math.min(Math.PI*2,at.group.bars.length*at.cfg.preferredSegmentLength/ht)',
+        'const ht=Math.max(dt,Dt.value+ot),Xt=ht>=120?40:16;return Math.min(Math.PI*2,(at.group.bars.length*at.cfg.preferredSegmentLength+Xt)/ht)',
+    ),
+    (
+        '{threshold:50,arcGap:.04,animationDuration:1e3,arcLayout:mt}',
+        '{threshold:50,arcGap:.06,animationDuration:1e3,arcLayout:mt}',
     ),
 )
 

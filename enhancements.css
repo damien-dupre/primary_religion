@@ -69,7 +69,7 @@
     z-index: 1180;
     top: 76px;
     left: 20px;
-    width: min(430px, calc(100vw - 40px));
+    width: min(275.2px, calc(100vw - 40px));
     padding: 8px 11px;
     border-left: 3px solid var(--school-catholic);
     border-radius: 0 10px 10px 0;
