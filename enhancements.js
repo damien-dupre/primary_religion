@@ -130,12 +130,15 @@
     }
 
     function createFilterUi(app, totals) {
+        const controls = document.createElement("div");
+        controls.className = "school-panel-controls";
+
         const toggle = document.createElement("button");
         toggle.type = "button";
         toggle.className = "school-filter-toggle";
         toggle.setAttribute("aria-controls", "school-filter-panel");
         toggle.setAttribute("aria-expanded", "false");
-        toggle.textContent = "School filters";
+        toggle.innerHTML = '<span class="school-toggle-label">School filters</span>';
 
         const panel = document.createElement("aside");
         panel.id = "school-filter-panel";
@@ -187,14 +190,15 @@
 
             <div class="school-filter-footer">
                 <div class="school-filter-count" id="school-filter-count">
-                    <strong>—</strong>
+                    <strong>0</strong>
                     schools shown
                 </div>
                 <button class="school-filter-reset" id="school-filter-reset" type="button">Reset filters</button>
             </div>
         `;
 
-        app.append(toggle, panel);
+        controls.append(toggle);
+        app.append(controls, panel);
 
         const setOpen = (open) => {
             panel.classList.toggle("is-open", open);
@@ -203,6 +207,93 @@
         toggle.addEventListener("click", () => setOpen(!panel.classList.contains("is-open")));
         panel.querySelector(".school-filter-close").addEventListener("click", () => setOpen(false));
         if (window.matchMedia("(min-width: 900px)").matches) setOpen(true);
+
+        for (const eventName of ["pointerdown", "dblclick", "wheel"]) {
+            panel.addEventListener(eventName, (event) => event.stopPropagation(), { passive: eventName === "wheel" });
+            toggle.addEventListener(eventName, (event) => event.stopPropagation(), { passive: eventName === "wheel" });
+        }
+
+        return { toggle, panel, setOpen, controls };
+    }
+
+    function createInfoUi(app, controls, closeFilters) {
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "school-filter-toggle project-info-toggle";
+        toggle.setAttribute("aria-controls", "project-info-panel");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.innerHTML = '<span class="school-toggle-label">About &amp; sources</span>';
+
+        const panel = document.createElement("aside");
+        panel.id = "project-info-panel";
+        panel.className = "school-filter-panel project-info-panel";
+        panel.setAttribute("aria-label", "About this visualisation and its data sources");
+        panel.innerHTML = `
+            <div class="school-filter-header">
+                <div>
+                    <p class="project-info-kicker">About this map</p>
+                    <h2>Primary School Lens Ireland</h2>
+                    <p>School ethos and local parent preference, explored through two interactive lenses.</p>
+                </div>
+                <button class="school-filter-close" type="button" aria-label="Close about and sources">×</button>
+            </div>
+
+            <section class="project-profile">
+                <a class="project-profile-link" href="https://www.linkedin.com/in/damien-dupre" target="_blank" rel="noopener noreferrer">
+                    <span class="project-profile-photo" aria-hidden="true">
+                        <span>DD</span>
+                        <img src="https://www.dcu.ie/sites/default/files/dcu_business_school_editor/2025-01/professional_picture.jpeg" alt="" loading="lazy" referrerpolicy="no-referrer">
+                    </span>
+                    <span class="project-profile-copy">
+                        <strong>Damien Dupré</strong>
+                        <span>Associate Professor · DCU Business School</span>
+                        <small>View LinkedIn profile ↗</small>
+                    </span>
+                </a>
+                <p>I teach business analytics, data visualisation and quantitative research methods, with research spanning applied data science and behavioural research.</p>
+            </section>
+
+            <section class="project-info-section">
+                <h3>Data sources</h3>
+                <div class="project-link-list">
+                    <a href="https://assets.gov.ie/static/documents/8e1b86ab/Data_on_Individual_Schools_Primary_Mainstream.xlsx" target="_blank" rel="noopener noreferrer">
+                        <span class="project-link-type">XLSX</span>
+                        <span><strong>Individual primary schools</strong><small>Primary mainstream school data</small></span>
+                        <i aria-hidden="true">↗</i>
+                    </a>
+                    <a href="https://assets.gov.ie/static/documents/360dd2e5/Primary_School_Results_For_All_Primary_Schools..xls" target="_blank" rel="noopener noreferrer">
+                        <span class="project-link-type">XLS</span>
+                        <span><strong>Parent survey results</strong><small>Results for all primary schools</small></span>
+                        <i aria-hidden="true">↗</i>
+                    </a>
+                </div>
+            </section>
+
+            <section class="project-info-section">
+                <h3>Project &amp; credits</h3>
+                <p>Built with the awesome <a href="https://visquill.com/visquill" target="_blank" rel="noopener noreferrer">VisQuill reactive geometry project ↗</a>.</p>
+                <p><a href="https://github.com/damien-dupre/primary_religion" target="_blank" rel="noopener noreferrer">View the source repository on GitHub ↗</a></p>
+            </section>
+
+            <p class="project-disclosure"><strong>Vibe-coding disclosure:</strong> Created with OpenAI GPT‑5.6 Sol, starting from a <a href="https://visquill.com/visuals/lens/" target="_blank" rel="noopener noreferrer">VisQuill Lens export ↗</a>.</p>
+        `;
+
+        controls.append(toggle);
+        app.append(panel);
+
+        const setOpen = (open) => {
+            panel.classList.toggle("is-open", open);
+            toggle.setAttribute("aria-expanded", String(open));
+        };
+        toggle.addEventListener("click", () => {
+            const open = !panel.classList.contains("is-open");
+            if (open) closeFilters();
+            setOpen(open);
+        });
+        panel.querySelector(".school-filter-close").addEventListener("click", () => setOpen(false));
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") setOpen(false);
+        });
 
         for (const eventName of ["pointerdown", "dblclick", "wheel"]) {
             panel.addEventListener(eventName, (event) => event.stopPropagation(), { passive: eventName === "wheel" });
@@ -430,7 +521,10 @@
         const totals = Object.fromEntries(ETHOS.map((ethos) => [ethos, 0]));
         for (const point of basePoints) totals[point.ethos] = (totals[point.ethos] || 0) + 1;
 
-        const { panel } = createFilterUi(app, totals);
+        const filterUi = createFilterUi(app, totals);
+        const infoUi = createInfoUi(app, filterUi.controls, () => filterUi.setOpen(false));
+        filterUi.toggle.addEventListener("click", () => infoUi.setOpen(false));
+        const { panel } = filterUi;
         const ethosInputs = [...panel.querySelectorAll("[data-ethos]")];
         const preferenceField = panel.querySelector("#preference-field");
         const thresholdInput = panel.querySelector("#preference-threshold");

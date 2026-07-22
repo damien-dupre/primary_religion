@@ -13,8 +13,16 @@ REPLACEMENTS = (
         'this.map=new Ky.Map({container:i,style:t_(n),center:[10,51],zoom:5,attributionControl:!1}),window.__visquillMap=this.map,this.map.once',
     ),
     (
+        'push(){super.push(),this.svg.textContent=this.text,bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
+        'push(){super.push(),this.svg.textContent=this.text,this.text.includes("\\n")&&(()=>{const n=this.text.split("\\n");this.svg.textContent="",n.forEach((h,y)=>{const A=document.createElementNS("http://www.w3.org/2000/svg","tspan");A.textContent=h,A.setAttribute("x","0"),A.setAttribute("dy",y===0?"-0.55em":"1.1em"),this.svg.appendChild(A)})})(),bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
+    ),
+    (
         'features:i.map(y=>({type:"Feature",geometry:{type:"Point",coordinates:[y.lng,y.lat]},properties:{}}))',
         'features:i.map(y=>({type:"Feature",geometry:{type:"Point",coordinates:[y.lng,y.lat]},properties:{id:y.id,ethos:y.ethos??(["Catholic","Church of Ireland","Multi-denominational","Inter-denominational","Other"][((y.values&&y.values[0])||[]).findIndex(z=>z>0)]??""),name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}}))',
+    ),
+    (
+        'name:J.showCategoryLabels?ot.label:""})),G=',
+        'name:J.showCategoryLabels?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Denominational","Denomina-\\ntional"):""})),G=',
     ),
     (
         'this.map.getLayer(gr.LAYER_ID)?(this.map.setPaintProperty(gr.LAYER_ID,"circle-radius",n.radius),this.map.setPaintProperty(gr.LAYER_ID,"circle-color",n.color)):this.map.addLayer({id:gr.LAYER_ID,type:"circle",source:gr.SOURCE_ID,paint:{"circle-radius":n.radius,"circle-color":n.color}})',
@@ -22,14 +30,54 @@ REPLACEMENTS = (
     ),
     (
         'A.update({points:c,groups:n.groups,config:Xy(I)}),new ResizeObserver',
-        'A.update({points:c,groups:n.groups,config:Xy(I)}),window.__visquillController=A,window.__visquillPayload={points:c,groups:n.groups,config:Xy(I)},window.dispatchEvent(new Event("visquill-ready")),new ResizeObserver',
+        'window.matchMedia("(max-width: 700px)").matches&&(I.radiusSlider.initial=Math.round(Math.max(70,Math.min(90,window.innerWidth*.23))));A.update({points:c,groups:n.groups,config:Xy(I)}),window.__visquillController=A,window.__visquillPayload={points:c,groups:n.groups,config:Xy(I)},window.dispatchEvent(new Event("visquill-ready")),new ResizeObserver',
+    ),
+    (
+        'Y={type:"bar-plot",aspect:"data",offset:20,barWidth:',
+        'Y={type:"bar-plot",aspect:"data",offset:34,barWidth:',
+    ),
+    (
+        'barOffset:10,baselineStyle:',
+        'barOffset:14,baselineStyle:',
     ),
 )
 
 PATCH_UPDATES = (
     (
+        'push(){super.push(),this.svg.textContent=this.text,window.matchMedia("(max-width: 700px)").matches&&this.text.includes("\\n")&&(()=>{const n=this.text.split("\\n");this.svg.textContent="",n.forEach((h,y)=>{const A=document.createElementNS("http://www.w3.org/2000/svg","tspan");A.textContent=h,A.setAttribute("x","0"),A.setAttribute("dy",y===0?"-0.55em":"1.1em"),this.svg.appendChild(A)})})(),bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
+        'push(){super.push(),this.svg.textContent=this.text,this.text.includes("\\n")&&(()=>{const n=this.text.split("\\n");this.svg.textContent="",n.forEach((h,y)=>{const A=document.createElementNS("http://www.w3.org/2000/svg","tspan");A.textContent=h,A.setAttribute("x","0"),A.setAttribute("dy",y===0?"-0.55em":"1.1em"),this.svg.appendChild(A)})})(),bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
+    ),
+    (
+        'name:J.showCategoryLabels?(window.matchMedia("(max-width: 700px)").matches?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Denominational","Denomina-\\ntional"):ot.label):""})),G=',
+        'name:J.showCategoryLabels?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Denominational","Denomina-\\ntional"):""})),G=',
+    ),
+    (
+        'push(){super.push(),this.svg.textContent=this.text,bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
+        'push(){super.push(),this.svg.textContent=this.text,window.matchMedia("(max-width: 700px)").matches&&this.text.includes("\\n")&&(()=>{const n=this.text.split("\\n");this.svg.textContent="",n.forEach((h,y)=>{const A=document.createElementNS("http://www.w3.org/2000/svg","tspan");A.textContent=h,A.setAttribute("x","0"),A.setAttribute("dy",y===0?"-0.55em":"1.1em"),this.svg.appendChild(A)})})(),bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
+    ),
+    (
+        'name:J.showCategoryLabels?ot.label:""})),G=',
+        'name:J.showCategoryLabels?(window.matchMedia("(max-width: 700px)").matches?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Denominational","Denomina-\\ntional"):ot.label):""})),G=',
+    ),
+    (
+        'const c=n.version===2?rx(n.points,n.groups):n.points;A.update({points:c,groups:n.groups,config:Xy(I)})',
+        'const c=n.version===2?rx(n.points,n.groups):n.points;window.matchMedia("(max-width: 700px)").matches&&(I.radiusSlider.initial=Math.round(Math.max(70,Math.min(90,window.innerWidth*.23))));A.update({points:c,groups:n.groups,config:Xy(I)})',
+    ),
+    (
         'properties:{id:y.id,ethos:y.ethos??"",name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}',
         'properties:{id:y.id,ethos:y.ethos??(["Catholic","Church of Ireland","Multi-denominational","Inter-denominational","Other"][((y.values&&y.values[0])||[]).findIndex(z=>z>0)]??""),name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}',
+    ),
+    (
+        'title:{style:Bo.aspectLabel(J.id),minLength:40,minRadius:40,offset:-20,text:J.label}',
+        'title:{style:Bo.aspectLabel(J.id),minLength:40,minRadius:40,text:J.label}',
+    ),
+    (
+        'Y={type:"bar-plot",aspect:"data",offset:20,barWidth:',
+        'Y={type:"bar-plot",aspect:"data",offset:34,barWidth:',
+    ),
+    (
+        'barOffset:10,baselineStyle:',
+        'barOffset:14,baselineStyle:',
     ),
 )
 
