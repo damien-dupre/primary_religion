@@ -40,6 +40,16 @@ PREFERENCE_COLORS = (
     "#ff4f9a",
 )
 
+SCHOOL_TYPE = (
+    "Single-sex",
+    "Coeducational",
+)
+
+SCHOOL_TYPE_COLORS = (
+    "#c43d32",
+    "#5966b3",
+)
+
 
 def normalise_ethos(value: str) -> str:
     key = value.strip().lower().replace("-", " ")
@@ -52,6 +62,15 @@ def normalise_ethos(value: str) -> str:
     if key == "inter denominational":
         return "Inter-denominational"
     return "Other"
+
+
+def normalise_school_type(value: str) -> str:
+    key = value.strip().lower().replace("-", " ")
+    if key == "single sex":
+        return "Single-sex"
+    if key == "co educational":
+        return "Coeducational"
+    return "Unknown"
 
 
 def finite_number(value: str) -> float | None:
@@ -116,6 +135,7 @@ def build() -> tuple[dict, list[dict]]:
     lngs: list[str] = []
     ethos_values: list[str] = []
     preference_values: list[str] = []
+    school_type_preference_values: list[str] = []
     school_details: list[dict] = []
     seen_ids: set[str] = set()
 
@@ -150,6 +170,28 @@ def build() -> tuple[dict, list[dict]]:
                 )
             )
 
+            school_type = normalise_school_type(row.get("Coeducational/Singlesex", ""))
+            single_sex = finite_number(
+                row.get(
+                    "Preference for singlesex from parents with children in primary school",
+                    "",
+                )
+            )
+            coeducational = finite_number(
+                row.get(
+                    "Preference for coeducational from parents with children in primary school",
+                    "",
+                )
+            )
+            school_type_preference_values.append(
+                ",".join(
+                    (
+                        compact_number(single_sex or 0.0),
+                        compact_number(coeducational or 0.0),
+                    )
+                )
+            )
+
             lat_text = format(lat, ".10g")
             lng_text = format(lng, ".10g")
             school_id = row.get("Roll Number", "").strip() or f"{lat_text},{lng_text}"
@@ -169,6 +211,7 @@ def build() -> tuple[dict, list[dict]]:
                     "county": row.get("County", "").strip()
                     or row.get("County Description", "").strip(),
                     "ethos": ethos,
+                    "schoolGender": school_type,
                     "denomPct": percentage(
                         row.get(
                             "Preference for denominational from parents with children in primary school (%)",
@@ -178,6 +221,18 @@ def build() -> tuple[dict, list[dict]]:
                     "multiPct": percentage(
                         row.get(
                             "Preference for multidenominational from parents with children in primary school (%)",
+                            "",
+                        )
+                    ),
+                    "singleSexPct": percentage(
+                        row.get(
+                            "Preference for singlesex from parents with children in primary school (%)",
+                            "",
+                        )
+                    ),
+                    "coedPct": percentage(
+                        row.get(
+                            "Preference for coeducational from parents with children in primary school (%)",
                             "",
                         )
                     ),
@@ -224,7 +279,7 @@ def build() -> tuple[dict, list[dict]]:
         {
             "type": "lenses",
             "config": {
-                "lensCount": 2,
+                "lensCount": 3,
                 "lenses": [
                     lens_config(
                         group=1,
@@ -234,12 +289,18 @@ def build() -> tuple[dict, list[dict]]:
                     ),
                     lens_config(
                         group=2,
-                        label="What parent here prefer",
+                        label="Parent Preference: School Ethos",
                         bars=PREFERENCE,
                         colors=PREFERENCE_COLORS,
                     ),
+                    lens_config(
+                        group=3,
+                        label="Parent Preference: School Type",
+                        bars=SCHOOL_TYPE,
+                        colors=SCHOOL_TYPE_COLORS,
+                    ),
                 ],
-                "lensesAtHome": {"1": False, "2": False},
+                "lensesAtHome": {"1": False, "2": False, "3": False},
                 "radiusSlider": {
                     "show": True,
                     "initial": 150,
@@ -258,7 +319,7 @@ def build() -> tuple[dict, list[dict]]:
             "type": "title",
             "config": {
                 "title": "Primary School Lens Ireland",
-                "subtitle": "Ethos mix and parental preference",
+                "subtitle": "Ethos, school type and parental preference",
             },
         },
     ]
@@ -271,8 +332,13 @@ def build() -> tuple[dict, list[dict]]:
         },
         {
             "id": 2,
-            "label": "What parent here prefer",
+            "label": "Parent Preference: School Ethos",
             "bars": [{"label": item} for item in PREFERENCE],
+        },
+        {
+            "id": 3,
+            "label": "Parent Preference: School Type",
+            "bars": [{"label": item} for item in SCHOOL_TYPE],
         },
     ]
 
@@ -287,6 +353,7 @@ def build() -> tuple[dict, list[dict]]:
             "values": [
                 "\n".join(ethos_values),
                 "\n".join(preference_values),
+                "\n".join(school_type_preference_values),
             ],
         },
     }, school_details

@@ -6,6 +6,8 @@
     --school-other: #d1a72b;
     --parent-denom: #343a40;
     --parent-multi: #ff4f9a;
+    --school-single-sex: #c43d32;
+    --school-coeducational: #5966b3;
     --filter-ink: #1f2933;
     --filter-muted: #66717f;
     --filter-line: #dde1e6;
@@ -369,6 +371,46 @@
     cursor: pointer;
 }
 
+.point-colour-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.point-colour-switch label {
+    position: relative;
+    cursor: pointer;
+}
+
+.point-colour-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.point-colour-switch span {
+    display: grid;
+    min-height: 34px;
+    place-items: center;
+    border: 1px solid #ccd2d9;
+    border-radius: 9px;
+    color: var(--filter-ink);
+    background: #fff;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.point-colour-switch input:checked + span {
+    border-color: #263241;
+    color: #fff;
+    background: #263241;
+}
+
+.point-colour-switch input:focus-visible + span {
+    outline: 2px solid #276c87;
+    outline-offset: 2px;
+}
+
 .ethos-filter-list {
     display: grid;
     gap: 7px;
@@ -559,6 +601,12 @@
     background: #f1f2f4;
     font-size: 11px;
     font-weight: 700;
+}
+
+.school-popup-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .school-popup-heading {

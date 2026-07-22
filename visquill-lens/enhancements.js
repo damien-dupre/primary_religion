@@ -19,9 +19,16 @@
         "Inter-denominational": "#58a58e",
         "Other": "#d1a72b",
     };
+    const SCHOOL_TYPES = ["Single-sex", "Coeducational"];
+    const SCHOOL_TYPE_COLORS = {
+        "Single-sex": "#c43d32",
+        "Coeducational": "#5966b3",
+    };
     const PARENT_COLORS = {
         denom: "#343a40",
         multi: "#ff4f9a",
+        singleSex: SCHOOL_TYPE_COLORS["Single-sex"],
+        coed: SCHOOL_TYPE_COLORS.Coeducational,
     };
 
     let initialized = false;
@@ -59,24 +66,33 @@
         });
     }
 
-    function addPointPresentation(map) {
+    function addPointPresentation(map, colourMode = "ethos") {
         if (!map.getLayer(LAYER_ID)) return;
-        map.setPaintProperty(LAYER_ID, "circle-color", [
-            "match",
-            ["get", "ethos"],
-            "Catholic", ETHOS_COLORS.Catholic,
-            "Church of Ireland", ETHOS_COLORS["Church of Ireland"],
-            "Multi-denominational", ETHOS_COLORS["Multi-denominational"],
-            "Inter-denominational", ETHOS_COLORS["Inter-denominational"],
-            "Other", ETHOS_COLORS.Other,
-            "#777777",
-        ]);
+        const colourExpression = colourMode === "schoolType"
+            ? [
+                "match",
+                ["get", "schoolGender"],
+                "Single-sex", SCHOOL_TYPE_COLORS["Single-sex"],
+                "Coeducational", SCHOOL_TYPE_COLORS.Coeducational,
+                "#777777",
+            ]
+            : [
+                "match",
+                ["get", "ethos"],
+                "Catholic", ETHOS_COLORS.Catholic,
+                "Church of Ireland", ETHOS_COLORS["Church of Ireland"],
+                "Multi-denominational", ETHOS_COLORS["Multi-denominational"],
+                "Inter-denominational", ETHOS_COLORS["Inter-denominational"],
+                "Other", ETHOS_COLORS.Other,
+                "#777777",
+            ];
+        map.setPaintProperty(LAYER_ID, "circle-color", colourExpression);
         map.setPaintProperty(LAYER_ID, "circle-stroke-color", "rgba(255,255,255,0.92)");
         map.setPaintProperty(LAYER_ID, "circle-stroke-width", 0.8);
         map.setPaintProperty(LAYER_ID, "circle-opacity", 0.9);
     }
 
-    function applySchoolPoints(map, points) {
+    function applySchoolPoints(map, points, colourMode = "ethos") {
         const data = {
             type: "FeatureCollection",
             features: points.map((school) => ({
@@ -91,8 +107,11 @@
                     name: school.name || "School",
                     county: school.county || "",
                     ethos: school.ethos || "Other",
+                    schoolGender: school.schoolGender || "Unknown",
                     denomPct: validPercentage(school.denomPct) ? Number(school.denomPct) : null,
                     multiPct: validPercentage(school.multiPct) ? Number(school.multiPct) : null,
+                    singleSexPct: validPercentage(school.singleSexPct) ? Number(school.singleSexPct) : null,
+                    coedPct: validPercentage(school.coedPct) ? Number(school.coedPct) : null,
                 },
             })),
         };
@@ -125,11 +144,11 @@
             map.setPaintProperty(VISQUILL_LAYER_ID, "circle-opacity", 0);
             map.setPaintProperty(VISQUILL_LAYER_ID, "circle-stroke-opacity", 0);
         }
-        addPointPresentation(map);
+        addPointPresentation(map, colourMode);
         return true;
     }
 
-    function createFilterUi(app, totals) {
+    function createFilterUi(app, totals, schoolTypeTotals) {
         const controls = document.createElement("div");
         controls.className = "school-panel-controls";
 
@@ -148,10 +167,24 @@
             <div class="school-filter-header">
                 <div>
                     <h2>Filter schools</h2>
-                    <p>Filters update the school dots and both VisQuill lenses.</p>
+                    <p>Filters update the school dots and all three VisQuill lenses.</p>
                 </div>
                 <button class="school-filter-close" type="button" aria-label="Close filters">×</button>
             </div>
+
+            <section class="school-filter-section">
+                <div class="school-filter-section-title">Colour school dots by</div>
+                <div class="point-colour-switch" role="radiogroup" aria-label="Colour school dots by">
+                    <label>
+                        <input type="radio" name="point-colour-mode" value="ethos" checked>
+                        <span>Ethos</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="point-colour-mode" value="schoolType">
+                        <span>School type</span>
+                    </label>
+                </div>
+            </section>
 
             <section class="school-filter-section">
                 <div class="school-filter-section-title">
@@ -171,11 +204,34 @@
             </section>
 
             <section class="school-filter-section">
-                <div class="school-filter-section-title">What parents prefer here</div>
+                <div class="school-filter-section-title">
+                    <span>School type</span>
+                    <button class="school-filter-link" id="select-all-school-types" type="button">Select all</button>
+                </div>
+                <div class="ethos-filter-list">
+                    ${SCHOOL_TYPES.map((schoolType) => `
+                        <label class="ethos-filter-option">
+                            <input type="checkbox" data-school-type="${escapeHtml(schoolType)}" checked>
+                            <span class="school-color-dot" style="background:${SCHOOL_TYPE_COLORS[schoolType]}"></span>
+                            <span>${escapeHtml(schoolType)}</span>
+                            <span class="ethos-filter-total">${(schoolTypeTotals[schoolType] || 0).toLocaleString()}</span>
+                        </label>
+                    `).join("")}
+                </div>
+            </section>
+
+            <section class="school-filter-section">
+                <div class="school-filter-section-title">Parent Preference</div>
                 <select class="preference-select" id="preference-field" aria-label="Parent preference to filter by">
                     <option value="any">Any preference</option>
-                    <option value="denom">Denominational</option>
-                    <option value="multi">Multi-denominational</option>
+                    <optgroup label="School Ethos">
+                        <option value="denom">Denominational</option>
+                        <option value="multi">Multi-denominational</option>
+                    </optgroup>
+                    <optgroup label="School Type">
+                        <option value="singleSex">Single-sex</option>
+                        <option value="coed">Coeducational</option>
+                    </optgroup>
                 </select>
                 <div class="preference-threshold is-disabled" id="preference-threshold-wrap">
                     <label for="preference-threshold">Minimum preference</label>
@@ -185,6 +241,8 @@
                 <div class="parent-color-key" aria-label="Parent preference lens colours">
                     <span><i class="parent-color-dot" style="background:${PARENT_COLORS.denom}"></i>Denominational</span>
                     <span><i class="parent-color-dot" style="background:${PARENT_COLORS.multi}"></i>Multi-denom.</span>
+                    <span><i class="parent-color-dot" style="background:${PARENT_COLORS.singleSex}"></i>Single-sex</span>
+                    <span><i class="parent-color-dot" style="background:${PARENT_COLORS.coed}"></i>Coeducational</span>
                 </div>
             </section>
 
@@ -233,7 +291,7 @@
                 <div>
                     <p class="project-info-kicker">About this map</p>
                     <h2>Primary School Lens Ireland</h2>
-                    <p>School ethos and local parent preference, explored through two interactive lenses.</p>
+                    <p>School ethos, school type and local parent preference, explored through three interactive lenses.</p>
                 </div>
                 <button class="school-filter-close" type="button" aria-label="Close about and sources">×</button>
             </div>
@@ -308,7 +366,7 @@
         intro.className = "map-intro";
         intro.setAttribute("aria-label", "How to use the school lens map");
         intro.innerHTML = `
-            <p><strong>Explore the map:</strong> Drag either lens to compare areas and tap a school dot for details.</p>
+            <p><strong>Explore the map:</strong> Drag any lens to compare areas and tap a school dot for details.</p>
             <p>Use <button type="button" data-open-panel="filters">School filters</button> to refine the view. Open <button type="button" data-open-panel="info">About &amp; sources</button> for the data, credits and code.</p>
         `;
 
@@ -362,22 +420,36 @@
         element.setAttribute("role", "dialog");
         element.setAttribute("aria-label", school.name);
 
-        const hasPreference = validPercentage(school.denomPct) && validPercentage(school.multiPct);
-        const preference = hasPreference
+        const hasEthosPreference = validPercentage(school.denomPct) && validPercentage(school.multiPct);
+        const ethosPreference = hasEthosPreference
             ? `${preferenceRow("Denominational", Number(school.denomPct), PARENT_COLORS.denom)}
                ${preferenceRow("Multi-denominational", Number(school.multiPct), PARENT_COLORS.multi)}`
             : '<div class="school-popup-no-data">No parental-preference survey data is available for this school area.</div>';
+        const hasSchoolTypePreference = validPercentage(school.singleSexPct) && validPercentage(school.coedPct);
+        const schoolTypePreference = hasSchoolTypePreference
+            ? `${preferenceRow("Single-sex", Number(school.singleSexPct), PARENT_COLORS.singleSex)}
+               ${preferenceRow("Coeducational", Number(school.coedPct), PARENT_COLORS.coed)}`
+            : '<div class="school-popup-no-data">No school-type preference data is available for this school area.</div>';
+        const schoolTypeColor = SCHOOL_TYPE_COLORS[school.schoolGender] || "#777";
 
         element.innerHTML = `
             <button class="school-popup-close" type="button" aria-label="Close school details">×</button>
             <h3>${escapeHtml(school.name)}</h3>
             <p class="school-popup-county">${escapeHtml(school.county || "Ireland")}</p>
-            <div class="school-popup-ethos">
-                <span class="school-color-dot" style="background:${ETHOS_COLORS[school.ethos] || "#777"}"></span>
-                ${escapeHtml(school.ethos)}
+            <div class="school-popup-tags">
+                <div class="school-popup-ethos">
+                    <span class="school-color-dot" style="background:${ETHOS_COLORS[school.ethos] || "#777"}"></span>
+                    ${escapeHtml(school.ethos)}
+                </div>
+                <div class="school-popup-ethos">
+                    <span class="school-color-dot" style="background:${schoolTypeColor}"></span>
+                    ${escapeHtml(school.schoolGender || "Unknown school type")}
+                </div>
             </div>
-            <div class="school-popup-heading">What parents here prefer</div>
-            ${preference}
+            <div class="school-popup-heading">Parent Preference: School Ethos</div>
+            ${ethosPreference}
+            <div class="school-popup-heading">Parent Preference: School Type</div>
+            ${schoolTypePreference}
         `;
         element.querySelector(".school-popup-close").addEventListener("click", closePopup);
         element.addEventListener("pointerdown", (event) => event.stopPropagation());
@@ -543,13 +615,19 @@
         });
         const totals = Object.fromEntries(ETHOS.map((ethos) => [ethos, 0]));
         for (const point of basePoints) totals[point.ethos] = (totals[point.ethos] || 0) + 1;
+        const schoolTypeTotals = Object.fromEntries(SCHOOL_TYPES.map((schoolType) => [schoolType, 0]));
+        for (const point of basePoints) {
+            schoolTypeTotals[point.schoolGender] = (schoolTypeTotals[point.schoolGender] || 0) + 1;
+        }
 
-        const filterUi = createFilterUi(app, totals);
+        const filterUi = createFilterUi(app, totals, schoolTypeTotals);
         const infoUi = createInfoUi(app, filterUi.controls, () => filterUi.setOpen(false));
         filterUi.toggle.addEventListener("click", () => infoUi.setOpen(false));
         createIntroUi(app, filterUi, infoUi);
         const { panel } = filterUi;
         const ethosInputs = [...panel.querySelectorAll("[data-ethos]")];
+        const schoolTypeInputs = [...panel.querySelectorAll("[data-school-type]")];
+        const colourModeInputs = [...panel.querySelectorAll('[name="point-colour-mode"]')];
         const preferenceField = panel.querySelector("#preference-field");
         const thresholdInput = panel.querySelector("#preference-threshold");
         const thresholdWrap = panel.querySelector("#preference-threshold-wrap");
@@ -557,17 +635,30 @@
         const countElement = panel.querySelector("#school-filter-count strong");
         let renderVersion = 0;
         let visiblePoints = basePoints;
+        const selectedColourMode = () => (
+            colourModeInputs.find((input) => input.checked)?.value || "ethos"
+        );
 
         const refresh = () => {
             const selectedEthos = new Set(
                 ethosInputs.filter((input) => input.checked).map((input) => input.dataset.ethos)
             );
+            const selectedSchoolTypes = new Set(
+                schoolTypeInputs.filter((input) => input.checked).map((input) => input.dataset.schoolType)
+            );
             const preference = preferenceField.value;
             const threshold = Number(thresholdInput.value);
+            const preferenceFields = {
+                denom: "denomPct",
+                multi: "multiPct",
+                singleSex: "singleSexPct",
+                coed: "coedPct",
+            };
             const filteredPoints = basePoints.filter((point) => {
                 if (!selectedEthos.has(point.ethos)) return false;
+                if (!selectedSchoolTypes.has(point.schoolGender)) return false;
                 if (preference === "any") return true;
-                const value = preference === "denom" ? point.denomPct : point.multiPct;
+                const value = point[preferenceFields[preference]];
                 return validPercentage(value) && Number(value) >= threshold;
             });
             visiblePoints = filteredPoints;
@@ -577,7 +668,7 @@
                 window.setTimeout(() => {
                     waitForLayer(map).then(() => {
                         if (version !== renderVersion) return;
-                        applySchoolPoints(map, filteredPoints);
+                        applySchoolPoints(map, filteredPoints, selectedColourMode());
                     }).catch((error) => console.error("Could not refresh school points:", error));
                 }, 0);
             };
@@ -597,8 +688,20 @@
         };
 
         for (const input of ethosInputs) input.addEventListener("change", refresh);
+        for (const input of schoolTypeInputs) input.addEventListener("change", refresh);
+        for (const input of colourModeInputs) {
+            input.addEventListener("change", () => {
+                waitForLayer(map)
+                    .then(() => applySchoolPoints(map, visiblePoints, selectedColourMode()))
+                    .catch((error) => console.error("Could not recolour school points:", error));
+            });
+        }
         panel.querySelector("#select-all-ethos").addEventListener("click", () => {
             ethosInputs.forEach((input) => { input.checked = true; });
+            refresh();
+        });
+        panel.querySelector("#select-all-school-types").addEventListener("click", () => {
+            schoolTypeInputs.forEach((input) => { input.checked = true; });
             refresh();
         });
         preferenceField.addEventListener("change", () => {
@@ -613,6 +716,8 @@
         });
         panel.querySelector("#school-filter-reset").addEventListener("click", () => {
             ethosInputs.forEach((input) => { input.checked = true; });
+            schoolTypeInputs.forEach((input) => { input.checked = true; });
+            colourModeInputs.forEach((input) => { input.checked = input.value === "ethos"; });
             preferenceField.value = "any";
             thresholdInput.value = "50";
             thresholdInput.disabled = true;

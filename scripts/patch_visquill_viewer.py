@@ -22,7 +22,7 @@ REPLACEMENTS = (
     ),
     (
         'name:J.showCategoryLabels?ot.label:""})),G=',
-        'name:J.showCategoryLabels?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Denominational","Denomina-\\ntional"):""})),G=',
+        'name:J.showCategoryLabels?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Coeducational","Coedu-\\ncational").replace("Denominational","Denomina-\\ntional"):""})),G=',
     ),
     (
         'this.map.getLayer(gr.LAYER_ID)?(this.map.setPaintProperty(gr.LAYER_ID,"circle-radius",n.radius),this.map.setPaintProperty(gr.LAYER_ID,"circle-color",n.color)):this.map.addLayer({id:gr.LAYER_ID,type:"circle",source:gr.SOURCE_ID,paint:{"circle-radius":n.radius,"circle-color":n.color}})',
@@ -55,6 +55,10 @@ REPLACEMENTS = (
 )
 
 PATCH_UPDATES = (
+    (
+        'name:J.showCategoryLabels?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Denominational","Denomina-\\ntional"):""})),G=',
+        'name:J.showCategoryLabels?ot.label.replace("Multi-denominational","Multi-\\ndenominational").replace("Inter-denominational","Inter-\\ndenominational").replace("Church of Ireland","Church of\\nIreland").replace("Coeducational","Coedu-\\ncational").replace("Denominational","Denomina-\\ntional"):""})),G=',
+    ),
     (
         'push(){super.push(),this.svg.textContent=this.text,window.matchMedia("(max-width: 700px)").matches&&this.text.includes("\\n")&&(()=>{const n=this.text.split("\\n");this.svg.textContent="",n.forEach((h,y)=>{const A=document.createElementNS("http://www.w3.org/2000/svg","tspan");A.textContent=h,A.setAttribute("x","0"),A.setAttribute("dy",y===0?"-0.55em":"1.1em"),this.svg.appendChild(A)})})(),bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
         'push(){super.push(),this.svg.textContent=this.text,this.text.includes("\\n")&&(()=>{const n=this.text.split("\\n");this.svg.textContent="",n.forEach((h,y)=>{const A=document.createElementNS("http://www.w3.org/2000/svg","tspan");A.textContent=h,A.setAttribute("x","0"),A.setAttribute("dy",y===0?"-0.55em":"1.1em"),this.svg.appendChild(A)})})(),bn.pushText(this.svg,this.anchor,this.rotation,this.offset,this.oriented,this.autoFlip)}',
