@@ -40,6 +40,10 @@ REPLACEMENTS = (
         'barOffset:10,baselineStyle:',
         'barOffset:14,baselineStyle:',
     ),
+    (
+        'Y=this.buildTitle(n),ot=10,dt=n.initialRadius',
+        'Y=this.buildTitle(n)+72,ot=10,dt=n.initialRadius',
+    ),
 )
 
 PATCH_UPDATES = (
@@ -78,6 +82,10 @@ PATCH_UPDATES = (
     (
         'barOffset:10,baselineStyle:',
         'barOffset:14,baselineStyle:',
+    ),
+    (
+        'Y=this.buildTitle(n),ot=10,dt=n.initialRadius',
+        'Y=this.buildTitle(n)+72,ot=10,dt=n.initialRadius',
     ),
 )
 

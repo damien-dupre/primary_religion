@@ -303,6 +303,29 @@
         return { toggle, panel, setOpen };
     }
 
+    function createIntroUi(app, filterUi, infoUi) {
+        const intro = document.createElement("section");
+        intro.className = "map-intro";
+        intro.setAttribute("aria-label", "How to use the school lens map");
+        intro.innerHTML = `
+            <p><strong>Explore the map:</strong> Drag either lens to compare areas and tap a school dot for details.</p>
+            <p>Use <button type="button" data-open-panel="filters">School filters</button> to refine the view. Open <button type="button" data-open-panel="info">About &amp; sources</button> for the data, credits and code.</p>
+        `;
+
+        intro.querySelector('[data-open-panel="filters"]').addEventListener("click", () => {
+            infoUi.setOpen(false);
+            filterUi.setOpen(true);
+        });
+        intro.querySelector('[data-open-panel="info"]').addEventListener("click", () => {
+            filterUi.setOpen(false);
+            infoUi.setOpen(true);
+        });
+        for (const eventName of ["pointerdown", "dblclick", "wheel"]) {
+            intro.addEventListener(eventName, (event) => event.stopPropagation(), { passive: eventName === "wheel" });
+        }
+        app.append(intro);
+    }
+
     function closePopup() {
         if (!activePopup) return;
         activePopup.element.remove();
@@ -524,6 +547,7 @@
         const filterUi = createFilterUi(app, totals);
         const infoUi = createInfoUi(app, filterUi.controls, () => filterUi.setOpen(false));
         filterUi.toggle.addEventListener("click", () => infoUi.setOpen(false));
+        createIntroUi(app, filterUi, infoUi);
         const { panel } = filterUi;
         const ethosInputs = [...panel.querySelectorAll("[data-ethos]")];
         const preferenceField = panel.querySelector("#preference-field");
