@@ -1,0 +1,400 @@
+:root {
+    --school-catholic: #8f3fb0;
+    --school-church: #e07a3f;
+    --school-multi: #2a7fa3;
+    --school-inter: #58a58e;
+    --school-other: #d1a72b;
+    --parent-denom: #343a40;
+    --parent-multi: #ff4f9a;
+    --filter-ink: #1f2933;
+    --filter-muted: #66717f;
+    --filter-line: #dde1e6;
+    --filter-paper: rgba(255, 255, 255, 0.96);
+}
+
+.school-filter-toggle {
+    position: absolute;
+    z-index: 1200;
+    top: 18px;
+    right: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 15px;
+    border: 1px solid rgba(31, 41, 51, 0.16);
+    border-radius: 12px;
+    color: var(--filter-ink);
+    background: var(--filter-paper);
+    box-shadow: 0 8px 24px rgba(31, 41, 51, 0.16);
+    font: 700 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+}
+
+.school-filter-toggle::before {
+    content: "";
+    width: 15px;
+    height: 12px;
+    border-top: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    background: linear-gradient(currentColor, currentColor) center / 9px 2px no-repeat;
+}
+
+.school-filter-toggle[aria-expanded="true"] {
+    color: #fff;
+    background: #263241;
+}
+
+.school-filter-panel {
+    position: absolute;
+    z-index: 1190;
+    top: 70px;
+    right: 18px;
+    width: min(330px, calc(100vw - 36px));
+    max-height: calc(100vh - 90px);
+    overflow: auto;
+    padding: 18px;
+    border: 1px solid rgba(31, 41, 51, 0.14);
+    border-radius: 16px;
+    color: var(--filter-ink);
+    background: var(--filter-paper);
+    box-shadow: 0 14px 42px rgba(31, 41, 51, 0.2);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 150ms ease, transform 150ms ease, visibility 150ms ease;
+    backdrop-filter: blur(14px);
+}
+
+.school-filter-panel.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.school-filter-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding-bottom: 13px;
+    border-bottom: 1px solid var(--filter-line);
+}
+
+.school-filter-header h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.15;
+}
+
+.school-filter-header p {
+    margin: 5px 0 0;
+    color: var(--filter-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.school-filter-close {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 8px;
+    color: #4f5965;
+    background: #eef0f3;
+    font-size: 19px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.school-filter-section {
+    padding-top: 15px;
+}
+
+.school-filter-section + .school-filter-section {
+    margin-top: 15px;
+    border-top: 1px solid var(--filter-line);
+}
+
+.school-filter-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.school-filter-link {
+    padding: 0;
+    border: 0;
+    color: #276c87;
+    background: transparent;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ethos-filter-list {
+    display: grid;
+    gap: 7px;
+}
+
+.ethos-filter-option {
+    display: grid;
+    grid-template-columns: 17px 11px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 27px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ethos-filter-option input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: #263241;
+}
+
+.school-color-dot,
+.parent-color-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+}
+
+.ethos-filter-total {
+    color: #858d98;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.preference-select {
+    width: 100%;
+    height: 38px;
+    padding: 0 32px 0 10px;
+    border: 1px solid #ccd2d9;
+    border-radius: 9px;
+    color: var(--filter-ink);
+    background: #fff;
+    font-size: 12px;
+}
+
+.preference-threshold {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.preference-threshold label {
+    color: var(--filter-muted);
+    font-size: 11px;
+}
+
+.preference-threshold output {
+    min-width: 42px;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.preference-threshold input {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--parent-multi);
+}
+
+.preference-threshold.is-disabled {
+    opacity: 0.42;
+}
+
+.parent-color-key {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.parent-color-key span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--filter-muted);
+    font-size: 10px;
+}
+
+.school-filter-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--filter-line);
+}
+
+.school-filter-count {
+    color: var(--filter-muted);
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+.school-filter-count strong {
+    display: block;
+    color: var(--filter-ink);
+    font-size: 15px;
+}
+
+.school-filter-reset {
+    min-height: 34px;
+    padding: 0 11px;
+    border: 1px solid #ccd2d9;
+    border-radius: 9px;
+    color: var(--filter-ink);
+    background: #fff;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.school-popup {
+    position: absolute;
+    z-index: 1300;
+    width: min(290px, calc(100vw - 28px));
+    padding: 15px;
+    border: 1px solid rgba(31, 41, 51, 0.14);
+    border-radius: 14px;
+    color: var(--filter-ink);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 14px 38px rgba(31, 41, 51, 0.24);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    pointer-events: auto;
+    transform: translate(-50%, calc(-100% - 15px));
+    backdrop-filter: blur(12px);
+}
+
+.school-popup::after {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-right: 1px solid rgba(31, 41, 51, 0.14);
+    border-bottom: 1px solid rgba(31, 41, 51, 0.14);
+    content: "";
+    transform: translate(-50%, -6px) rotate(45deg);
+}
+
+.school-popup-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 27px;
+    height: 27px;
+    border: 0;
+    border-radius: 7px;
+    color: #5d6672;
+    background: #eff1f3;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.school-popup h3 {
+    margin: 0 30px 4px 0;
+    font-size: 15px;
+    line-height: 1.25;
+}
+
+.school-popup-county {
+    margin: 0 0 10px;
+    color: var(--filter-muted);
+    font-size: 10.5px;
+}
+
+.school-popup-ethos {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    color: #38424e;
+    background: #f1f2f4;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.school-popup-heading {
+    margin: 12px 0 7px;
+    color: #525c68;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.school-popup-pref-row {
+    display: grid;
+    grid-template-columns: 1fr 88px 36px;
+    align-items: center;
+    gap: 7px;
+    margin-top: 6px;
+    font-size: 10.5px;
+}
+
+.school-popup-pref-track {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #e8eaed;
+}
+
+.school-popup-pref-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.school-popup-pref-value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.school-popup-no-data {
+    color: var(--filter-muted);
+    font-size: 11px;
+}
+
+#app.school-point-hover,
+#app.school-point-hover * {
+    cursor: pointer !important;
+}
+
+@media (max-width: 700px) {
+    .school-filter-toggle {
+        top: 10px;
+        right: 10px;
+    }
+
+    .school-filter-panel {
+        top: 61px;
+        right: 10px;
+        width: min(318px, calc(100vw - 20px));
+        max-height: calc(100vh - 75px);
+    }
+
+    .school-popup {
+        transform: translate(-50%, calc(-100% - 12px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .school-filter-panel { transition: none; }
+}
