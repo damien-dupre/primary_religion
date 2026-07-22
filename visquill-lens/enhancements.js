@@ -446,9 +446,9 @@
                     ${escapeHtml(school.schoolGender || "Unknown school type")}
                 </div>
             </div>
-            <div class="school-popup-heading">Parent Preference: School Ethos</div>
+            <div class="school-popup-heading">Preferred Ethos</div>
             ${ethosPreference}
-            <div class="school-popup-heading">Parent Preference: School Type</div>
+            <div class="school-popup-heading">Preferred School Type</div>
             ${schoolTypePreference}
         `;
         element.querySelector(".school-popup-close").addEventListener("click", closePopup);

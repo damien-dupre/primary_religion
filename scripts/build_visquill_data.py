@@ -289,13 +289,13 @@ def build() -> tuple[dict, list[dict]]:
                     ),
                     lens_config(
                         group=2,
-                        label="Parent Preference: School Ethos",
+                        label="Preferred Ethos",
                         bars=PREFERENCE,
                         colors=PREFERENCE_COLORS,
                     ),
                     lens_config(
                         group=3,
-                        label="Parent Preference: School Type",
+                        label="Preferred School Type",
                         bars=SCHOOL_TYPE,
                         colors=SCHOOL_TYPE_COLORS,
                     ),
@@ -332,12 +332,12 @@ def build() -> tuple[dict, list[dict]]:
         },
         {
             "id": 2,
-            "label": "Parent Preference: School Ethos",
+            "label": "Preferred Ethos",
             "bars": [{"label": item} for item in PREFERENCE],
         },
         {
             "id": 3,
-            "label": "Parent Preference: School Type",
+            "label": "Preferred School Type",
             "bars": [{"label": item} for item in SCHOOL_TYPE],
         },
     ]
