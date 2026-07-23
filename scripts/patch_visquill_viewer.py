@@ -18,7 +18,7 @@ REPLACEMENTS = (
     ),
     (
         'features:i.map(y=>({type:"Feature",geometry:{type:"Point",coordinates:[y.lng,y.lat]},properties:{}}))',
-        'features:i.map(y=>({type:"Feature",geometry:{type:"Point",coordinates:[y.lng,y.lat]},properties:{id:y.id,ethos:y.ethos??(["Catholic","Church of Ireland","Multi-denominational","Inter-denominational","Other"][((y.values&&y.values[0])||[]).findIndex(z=>z>0)]??""),name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}}))',
+        'features:i.map(y=>({type:"Feature",geometry:{type:"Point",coordinates:[y.lng,y.lat]},properties:{id:y.id,ethos:y.ethos??"",name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}}))',
     ),
     (
         'name:J.showCategoryLabels?ot.label:""})),G=',
@@ -80,8 +80,8 @@ PATCH_UPDATES = (
         'const c=n.version===2?rx(n.points,n.groups):n.points;window.matchMedia("(max-width: 700px)").matches&&(I.radiusSlider.initial=Math.round(Math.max(70,Math.min(90,window.innerWidth*.23))));A.update({points:c,groups:n.groups,config:Xy(I)})',
     ),
     (
-        'properties:{id:y.id,ethos:y.ethos??"",name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}',
         'properties:{id:y.id,ethos:y.ethos??(["Catholic","Church of Ireland","Multi-denominational","Inter-denominational","Other"][((y.values&&y.values[0])||[]).findIndex(z=>z>0)]??""),name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}',
+        'properties:{id:y.id,ethos:y.ethos??"",name:y.name??"",county:y.county??"",denomPct:y.denomPct??null,multiPct:y.multiPct??null}',
     ),
     (
         'title:{style:Bo.aspectLabel(J.id),minLength:40,minRadius:40,offset:-20,text:J.label}',

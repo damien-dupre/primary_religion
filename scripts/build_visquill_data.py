@@ -14,20 +14,14 @@ SOURCE = ROOT / "data" / "df.csv"
 OUTPUT = ROOT / "data.json"
 DETAILS_OUTPUT = ROOT / "school-details.json"
 
-ETHOS = (
-    "Catholic",
-    "Church of Ireland",
-    "Multi-denominational",
-    "Inter-denominational",
-    "Other",
+LANGUAGE = (
+    "English",
+    "Irish",
 )
 
-ETHOS_COLORS = (
-    "#8f3fb0",
-    "#e07a3f",
-    "#2a7fa3",
-    "#58a58e",
-    "#d1a72b",
+LANGUAGE_COLORS = (
+    "#00796b",
+    "#f2a900",
 )
 
 PREFERENCE = (
@@ -70,6 +64,15 @@ def normalise_school_type(value: str) -> str:
         return "Single-sex"
     if key == "co educational":
         return "Coeducational"
+    return "Unknown"
+
+
+def normalise_language(value: str) -> str:
+    key = value.strip().lower()
+    if key == "english":
+        return "English"
+    if key == "irish":
+        return "Irish"
     return "Unknown"
 
 
@@ -133,7 +136,7 @@ def build() -> tuple[dict, list[dict]]:
     ids: list[str] = []
     lats: list[str] = []
     lngs: list[str] = []
-    ethos_values: list[str] = []
+    language_preference_values: list[str] = []
     preference_values: list[str] = []
     school_type_preference_values: list[str] = []
     school_details: list[dict] = []
@@ -146,8 +149,28 @@ def build() -> tuple[dict, list[dict]]:
             if lat is None or lng is None:
                 continue
 
+            language = normalise_language(row.get("Language", ""))
+            english = finite_number(
+                row.get(
+                    "Preference for English from parents with children in primary school",
+                    "",
+                )
+            )
+            irish = finite_number(
+                row.get(
+                    "Preference for Irish from parents with children in primary school",
+                    "",
+                )
+            )
+            language_preference_values.append(
+                ",".join(
+                    (
+                        compact_number(english or 0.0),
+                        compact_number(irish or 0.0),
+                    )
+                )
+            )
             ethos = normalise_ethos(row.get("Ethos Description", ""))
-            ethos_values.append(",".join("1" if item == ethos else "0" for item in ETHOS))
 
             denominational = finite_number(
                 row.get(
@@ -212,6 +235,25 @@ def build() -> tuple[dict, list[dict]]:
                     or row.get("County Description", "").strip(),
                     "ethos": ethos,
                     "schoolGender": school_type,
+                    "instructionLanguage": language,
+                    "participationPct": percentage(
+                        row.get(
+                            "Response rate from parents with children in primary school",
+                            "",
+                        )
+                    ),
+                    "englishPct": percentage(
+                        row.get(
+                            "Preference for English from parents with children in primary school (%)",
+                            "",
+                        )
+                    ),
+                    "irishPct": percentage(
+                        row.get(
+                            "Preference for Irish from parents with children in primary school (%)",
+                            "",
+                        )
+                    ),
                     "denomPct": percentage(
                         row.get(
                             "Preference for denominational from parents with children in primary school (%)",
@@ -283,9 +325,9 @@ def build() -> tuple[dict, list[dict]]:
                 "lenses": [
                     lens_config(
                         group=1,
-                        label="Ethos mix under the lens",
-                        bars=ETHOS,
-                        colors=ETHOS_COLORS,
+                        label="Preferred Language",
+                        bars=LANGUAGE,
+                        colors=LANGUAGE_COLORS,
                     ),
                     lens_config(
                         group=2,
@@ -319,7 +361,7 @@ def build() -> tuple[dict, list[dict]]:
             "type": "title",
             "config": {
                 "title": "Primary School Lens Ireland",
-                "subtitle": "Ethos, school type and parental preference",
+                "subtitle": "Parental preferences for language, ethos and school type",
             },
         },
     ]
@@ -327,8 +369,8 @@ def build() -> tuple[dict, list[dict]]:
     groups = [
         {
             "id": 1,
-            "label": "Ethos mix under the lens",
-            "bars": [{"label": item} for item in ETHOS],
+            "label": "Preferred Language",
+            "bars": [{"label": item} for item in LANGUAGE],
         },
         {
             "id": 2,
@@ -351,7 +393,7 @@ def build() -> tuple[dict, list[dict]]:
             "lats": "\n".join(lats),
             "lngs": "\n".join(lngs),
             "values": [
-                "\n".join(ethos_values),
+                "\n".join(language_preference_values),
                 "\n".join(preference_values),
                 "\n".join(school_type_preference_values),
             ],

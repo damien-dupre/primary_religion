@@ -24,7 +24,14 @@
         "Single-sex": "#c43d32",
         "Coeducational": "#5966b3",
     };
+    const LANGUAGES = ["English", "Irish"];
+    const LANGUAGE_COLORS = {
+        "English": "#00796b",
+        "Irish": "#f2a900",
+    };
     const PARENT_COLORS = {
+        english: LANGUAGE_COLORS.English,
+        irish: LANGUAGE_COLORS.Irish,
         denom: "#343a40",
         multi: "#ff4f9a",
         singleSex: SCHOOL_TYPE_COLORS["Single-sex"],
@@ -68,15 +75,25 @@
 
     function addPointPresentation(map, colourMode = "ethos") {
         if (!map.getLayer(LAYER_ID)) return;
-        const colourExpression = colourMode === "schoolType"
-            ? [
+        let colourExpression;
+        if (colourMode === "schoolType") {
+            colourExpression = [
                 "match",
                 ["get", "schoolGender"],
                 "Single-sex", SCHOOL_TYPE_COLORS["Single-sex"],
                 "Coeducational", SCHOOL_TYPE_COLORS.Coeducational,
                 "#777777",
-            ]
-            : [
+            ];
+        } else if (colourMode === "language") {
+            colourExpression = [
+                "match",
+                ["get", "instructionLanguage"],
+                "English", LANGUAGE_COLORS.English,
+                "Irish", LANGUAGE_COLORS.Irish,
+                "#777777",
+            ];
+        } else {
+            colourExpression = [
                 "match",
                 ["get", "ethos"],
                 "Catholic", ETHOS_COLORS.Catholic,
@@ -86,6 +103,7 @@
                 "Other", ETHOS_COLORS.Other,
                 "#777777",
             ];
+        }
         map.setPaintProperty(LAYER_ID, "circle-color", colourExpression);
         map.setPaintProperty(LAYER_ID, "circle-stroke-color", "rgba(255,255,255,0.92)");
         map.setPaintProperty(LAYER_ID, "circle-stroke-width", 0.8);
@@ -108,6 +126,10 @@
                     county: school.county || "",
                     ethos: school.ethos || "Other",
                     schoolGender: school.schoolGender || "Unknown",
+                    instructionLanguage: school.instructionLanguage || "Unknown",
+                    participationPct: validPercentage(school.participationPct) ? Number(school.participationPct) : null,
+                    englishPct: validPercentage(school.englishPct) ? Number(school.englishPct) : null,
+                    irishPct: validPercentage(school.irishPct) ? Number(school.irishPct) : null,
                     denomPct: validPercentage(school.denomPct) ? Number(school.denomPct) : null,
                     multiPct: validPercentage(school.multiPct) ? Number(school.multiPct) : null,
                     singleSexPct: validPercentage(school.singleSexPct) ? Number(school.singleSexPct) : null,
@@ -148,7 +170,7 @@
         return true;
     }
 
-    function createFilterUi(app, totals, schoolTypeTotals) {
+    function createFilterUi(app, totals, schoolTypeTotals, languageTotals) {
         const controls = document.createElement("div");
         controls.className = "school-panel-controls";
 
@@ -183,6 +205,34 @@
                         <input type="radio" name="point-colour-mode" value="schoolType">
                         <span>School type</span>
                     </label>
+                    <label>
+                        <input type="radio" name="point-colour-mode" value="language">
+                        <span>Language</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="school-filter-section parent-preference-filter">
+                <div class="school-filter-section-title">Parent Preference</div>
+                <select class="preference-select" id="preference-field" aria-label="Parent preference to filter by">
+                    <option value="any">Any preference</option>
+                    <optgroup label="Language">
+                        <option value="english">English</option>
+                        <option value="irish">Irish</option>
+                    </optgroup>
+                    <optgroup label="School Ethos">
+                        <option value="denom">Denominational</option>
+                        <option value="multi">Multi-denominational</option>
+                    </optgroup>
+                    <optgroup label="School Type">
+                        <option value="singleSex">Single-sex</option>
+                        <option value="coed">Coeducational</option>
+                    </optgroup>
+                </select>
+                <div class="preference-threshold is-disabled" id="preference-threshold-wrap">
+                    <label for="preference-threshold">Minimum preference</label>
+                    <output id="preference-threshold-value" for="preference-threshold">50%</output>
+                    <input id="preference-threshold" type="range" min="0" max="100" step="1" value="50" disabled>
                 </div>
             </section>
 
@@ -221,28 +271,19 @@
             </section>
 
             <section class="school-filter-section">
-                <div class="school-filter-section-title">Parent Preference</div>
-                <select class="preference-select" id="preference-field" aria-label="Parent preference to filter by">
-                    <option value="any">Any preference</option>
-                    <optgroup label="School Ethos">
-                        <option value="denom">Denominational</option>
-                        <option value="multi">Multi-denominational</option>
-                    </optgroup>
-                    <optgroup label="School Type">
-                        <option value="singleSex">Single-sex</option>
-                        <option value="coed">Coeducational</option>
-                    </optgroup>
-                </select>
-                <div class="preference-threshold is-disabled" id="preference-threshold-wrap">
-                    <label for="preference-threshold">Minimum preference</label>
-                    <output id="preference-threshold-value" for="preference-threshold">50%</output>
-                    <input id="preference-threshold" type="range" min="0" max="100" step="1" value="50" disabled>
+                <div class="school-filter-section-title">
+                    <span>School language</span>
+                    <button class="school-filter-link" id="select-all-languages" type="button">Select all</button>
                 </div>
-                <div class="parent-color-key" aria-label="Parent preference lens colours">
-                    <span><i class="parent-color-dot" style="background:${PARENT_COLORS.denom}"></i>Denominational</span>
-                    <span><i class="parent-color-dot" style="background:${PARENT_COLORS.multi}"></i>Multi-denom.</span>
-                    <span><i class="parent-color-dot" style="background:${PARENT_COLORS.singleSex}"></i>Single-sex</span>
-                    <span><i class="parent-color-dot" style="background:${PARENT_COLORS.coed}"></i>Coeducational</span>
+                <div class="ethos-filter-list">
+                    ${LANGUAGES.map((language) => `
+                        <label class="ethos-filter-option">
+                            <input type="checkbox" data-language="${escapeHtml(language)}" checked>
+                            <span class="school-color-dot" style="background:${LANGUAGE_COLORS[language]}"></span>
+                            <span>${escapeHtml(language)}</span>
+                            <span class="ethos-filter-total">${(languageTotals[language] || 0).toLocaleString()}</span>
+                        </label>
+                    `).join("")}
                 </div>
             </section>
 
@@ -291,7 +332,7 @@
                 <div>
                     <p class="project-info-kicker">About this map</p>
                     <h2>Primary School Lens Ireland</h2>
-                    <p>School ethos, school type and local parent preference, explored through three interactive lenses.</p>
+                    <p>Preferred language, preferred ethos and preferred school type, explored through three interactive lenses.</p>
                 </div>
                 <button class="school-filter-close" type="button" aria-label="Close about and sources">×</button>
             </div>
@@ -430,12 +471,25 @@
             ? `${preferenceRow("Single-sex", Number(school.singleSexPct), PARENT_COLORS.singleSex)}
                ${preferenceRow("Coeducational", Number(school.coedPct), PARENT_COLORS.coed)}`
             : '<div class="school-popup-no-data">No school-type preference data is available for this school area.</div>';
+        const hasLanguagePreference = validPercentage(school.englishPct) && validPercentage(school.irishPct);
+        const languagePreference = hasLanguagePreference
+            ? `${preferenceRow("English", Number(school.englishPct), PARENT_COLORS.english)}
+               ${preferenceRow("Irish", Number(school.irishPct), PARENT_COLORS.irish)}`
+            : '<div class="school-popup-no-data">No language preference data is available for this school area.</div>';
         const schoolTypeColor = SCHOOL_TYPE_COLORS[school.schoolGender] || "#777";
+        const languageColor = LANGUAGE_COLORS[school.instructionLanguage] || "#777";
+        const participation = validPercentage(school.participationPct)
+            ? `${Math.round(Number(school.participationPct))}%`
+            : "Not available";
 
         element.innerHTML = `
             <button class="school-popup-close" type="button" aria-label="Close school details">×</button>
             <h3>${escapeHtml(school.name)}</h3>
             <p class="school-popup-county">${escapeHtml(school.county || "Ireland")}</p>
+            <p class="school-popup-participation">
+                <span>Parent survey participation</span>
+                <strong>${participation}</strong>
+            </p>
             <div class="school-popup-tags">
                 <div class="school-popup-ethos">
                     <span class="school-color-dot" style="background:${ETHOS_COLORS[school.ethos] || "#777"}"></span>
@@ -445,7 +499,13 @@
                     <span class="school-color-dot" style="background:${schoolTypeColor}"></span>
                     ${escapeHtml(school.schoolGender || "Unknown school type")}
                 </div>
+                <div class="school-popup-ethos">
+                    <span class="school-color-dot" style="background:${languageColor}"></span>
+                    ${escapeHtml(school.instructionLanguage || "Unknown language")}
+                </div>
             </div>
+            <div class="school-popup-heading">Preferred Language</div>
+            ${languagePreference}
             <div class="school-popup-heading">Preferred Ethos</div>
             ${ethosPreference}
             <div class="school-popup-heading">Preferred School Type</div>
@@ -593,6 +653,105 @@
         });
     }
 
+    function installLensSchoolCounts(map, app, groups, getVisiblePoints) {
+        const badges = new Map();
+        const preferenceFields = {
+            "1": ["englishPct", "irishPct"],
+            "2": ["denomPct", "multiPct"],
+            "3": ["singleSexPct", "coedPct"],
+        };
+
+        for (const group of groups) {
+            const badge = document.createElement("div");
+            badge.className = "lens-school-count";
+            badge.dataset.lensId = String(group.id);
+            badge.setAttribute("aria-live", "polite");
+            app.appendChild(badge);
+            badges.set(String(group.id), { badge, label: group.label });
+        }
+
+        const lensBounds = (lensId) => {
+            const rim = document.querySelector(`.vq-lens-${lensId}-rim`);
+            if (!rim) return null;
+
+            let ancestor = rim.parentElement;
+            while (ancestor && ancestor.tagName.toLowerCase() !== "svg") {
+                const handles = ancestor.querySelectorAll(".vq-lens-handle");
+                if (handles.length === 1) {
+                    const handleBounds = handles[0].getBoundingClientRect();
+                    if (handleBounds.width > 40 && handleBounds.height > 40) return handleBounds;
+                }
+                ancestor = ancestor.parentElement;
+            }
+            return rim.getBoundingClientRect();
+        };
+
+        const update = () => {
+            const appBounds = app.getBoundingClientRect();
+            const canvasBounds = map.getCanvas().getBoundingClientRect();
+            const projectedSchools = getVisiblePoints().map((school) => {
+                const point = map.project([Number(school.lng), Number(school.lat)]);
+                return {
+                    school,
+                    x: canvasBounds.left - appBounds.left + point.x,
+                    y: canvasBounds.top - appBounds.top + point.y,
+                };
+            });
+
+            for (const [lensId, entry] of badges) {
+                const bounds = lensBounds(lensId);
+                if (!bounds || bounds.width < 40 || bounds.height < 40) {
+                    entry.badge.hidden = true;
+                    continue;
+                }
+
+                const centerX = bounds.left - appBounds.left + bounds.width / 2;
+                const centerY = bounds.top - appBounds.top + bounds.height / 2;
+                const radius = Math.min(bounds.width, bounds.height) / 2;
+                const requiredFields = preferenceFields[lensId] || [];
+                const count = projectedSchools.reduce((total, item) => {
+                    if (!requiredFields.every((field) => validPercentage(item.school[field]))) return total;
+                    const distance = Math.hypot(item.x - centerX, item.y - centerY);
+                    return total + (distance <= radius ? 1 : 0);
+                }, 0);
+
+                entry.badge.hidden = false;
+                entry.badge.textContent = `${count.toLocaleString()} ${count === 1 ? "school" : "schools"}`;
+                entry.badge.setAttribute(
+                    "aria-label",
+                    `${count.toLocaleString()} schools analysed in the ${entry.label} lens`
+                );
+                entry.badge.style.left = `${centerX + radius * 0.32}px`;
+                entry.badge.style.top = `${centerY + radius * 0.63}px`;
+            }
+        };
+
+        let timer = 0;
+        let animateUntil = 0;
+        const tick = () => {
+            timer = 0;
+            update();
+            if (Date.now() < animateUntil) timer = window.setTimeout(tick, 80);
+        };
+        const animate = (duration = 180) => {
+            animateUntil = Math.max(animateUntil, Date.now() + duration);
+            if (!timer) tick();
+        };
+
+        for (const eventName of ["pointerdown", "pointermove", "pointerup", "pointercancel", "wheel"]) {
+            window.addEventListener(eventName, () => animate(eventName === "pointermove" ? 140 : 1000), {
+                capture: true,
+                passive: true,
+            });
+        }
+        map.on("move", () => animate(180));
+        map.on("zoom", () => animate(180));
+        new ResizeObserver(() => animate(500)).observe(app);
+        animate(1500);
+
+        return { animate };
+    }
+
     async function init() {
         if (initialized || !window.__visquillMap || !window.__visquillController || !window.__visquillPayload) return;
         initialized = true;
@@ -619,14 +778,19 @@
         for (const point of basePoints) {
             schoolTypeTotals[point.schoolGender] = (schoolTypeTotals[point.schoolGender] || 0) + 1;
         }
+        const languageTotals = Object.fromEntries(LANGUAGES.map((language) => [language, 0]));
+        for (const point of basePoints) {
+            languageTotals[point.instructionLanguage] = (languageTotals[point.instructionLanguage] || 0) + 1;
+        }
 
-        const filterUi = createFilterUi(app, totals, schoolTypeTotals);
+        const filterUi = createFilterUi(app, totals, schoolTypeTotals, languageTotals);
         const infoUi = createInfoUi(app, filterUi.controls, () => filterUi.setOpen(false));
         filterUi.toggle.addEventListener("click", () => infoUi.setOpen(false));
         createIntroUi(app, filterUi, infoUi);
         const { panel } = filterUi;
         const ethosInputs = [...panel.querySelectorAll("[data-ethos]")];
         const schoolTypeInputs = [...panel.querySelectorAll("[data-school-type]")];
+        const languageInputs = [...panel.querySelectorAll("[data-language]")];
         const colourModeInputs = [...panel.querySelectorAll('[name="point-colour-mode"]')];
         const preferenceField = panel.querySelector("#preference-field");
         const thresholdInput = panel.querySelector("#preference-threshold");
@@ -635,6 +799,7 @@
         const countElement = panel.querySelector("#school-filter-count strong");
         let renderVersion = 0;
         let visiblePoints = basePoints;
+        let lensCounts = null;
         const selectedColourMode = () => (
             colourModeInputs.find((input) => input.checked)?.value || "ethos"
         );
@@ -646,9 +811,14 @@
             const selectedSchoolTypes = new Set(
                 schoolTypeInputs.filter((input) => input.checked).map((input) => input.dataset.schoolType)
             );
+            const selectedLanguages = new Set(
+                languageInputs.filter((input) => input.checked).map((input) => input.dataset.language)
+            );
             const preference = preferenceField.value;
             const threshold = Number(thresholdInput.value);
             const preferenceFields = {
+                english: "englishPct",
+                irish: "irishPct",
                 denom: "denomPct",
                 multi: "multiPct",
                 singleSex: "singleSexPct",
@@ -657,6 +827,7 @@
             const filteredPoints = basePoints.filter((point) => {
                 if (!selectedEthos.has(point.ethos)) return false;
                 if (!selectedSchoolTypes.has(point.schoolGender)) return false;
+                if (!selectedLanguages.has(point.instructionLanguage)) return false;
                 if (preference === "any") return true;
                 const value = point[preferenceFields[preference]];
                 return validPercentage(value) && Number(value) >= threshold;
@@ -682,6 +853,7 @@
                 groups: payload.groups,
                 config: payload.config,
             });
+            if (lensCounts) lensCounts.animate(1200);
             countElement.textContent = `${filteredPoints.length.toLocaleString()} of ${basePoints.length.toLocaleString()}`;
             closePopup();
             window.setTimeout(syncRenderedPoints, 300);
@@ -689,6 +861,7 @@
 
         for (const input of ethosInputs) input.addEventListener("change", refresh);
         for (const input of schoolTypeInputs) input.addEventListener("change", refresh);
+        for (const input of languageInputs) input.addEventListener("change", refresh);
         for (const input of colourModeInputs) {
             input.addEventListener("change", () => {
                 waitForLayer(map)
@@ -704,6 +877,10 @@
             schoolTypeInputs.forEach((input) => { input.checked = true; });
             refresh();
         });
+        panel.querySelector("#select-all-languages").addEventListener("click", () => {
+            languageInputs.forEach((input) => { input.checked = true; });
+            refresh();
+        });
         preferenceField.addEventListener("change", () => {
             const disabled = preferenceField.value === "any";
             thresholdInput.disabled = disabled;
@@ -717,6 +894,7 @@
         panel.querySelector("#school-filter-reset").addEventListener("click", () => {
             ethosInputs.forEach((input) => { input.checked = true; });
             schoolTypeInputs.forEach((input) => { input.checked = true; });
+            languageInputs.forEach((input) => { input.checked = true; });
             colourModeInputs.forEach((input) => { input.checked = input.value === "ethos"; });
             preferenceField.value = "any";
             thresholdInput.value = "50";
@@ -728,6 +906,7 @@
 
         await waitForLayer(map);
         installMapInteractions(map, app, detailsById, () => visiblePoints);
+        lensCounts = installLensSchoolCounts(map, app, payload.groups, () => visiblePoints);
         refresh();
     }
 
